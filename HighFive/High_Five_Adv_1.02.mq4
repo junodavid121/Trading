@@ -11,7 +11,8 @@
 
 //External variables
 extern int MagicNumber = 123;
-extern int TakeProfit = 8;
+extern int TakeProfit = 150;
+extern int TakeProfit_pip = 8;
 extern int StopLoss = 5000;
 extern int MaxSlippage = 10;
 
@@ -139,6 +140,19 @@ double findTotalProfit()
    }
 
 //----------------------------------------------------------------------------------------------
+//Find total Lots
+double findTotalLots()
+   {
+     double Total_lot= 0;
+     for(int cnt = 0; cnt <= OrdersTotal(); cnt++){
+       if(!OrderSelect(cnt, SELECT_BY_POS, MODE_TRADES)) continue;
+       if(OrderMagicNumber() != MagicNumber) continue;
+       Total_lot += OrderLots();
+     }
+     return Total_lot;
+   }
+
+//----------------------------------------------------------------------------------------------
 // Calculate Average  price
 double PriceAverage(int type)
 {
@@ -158,64 +172,7 @@ double PriceAverage(int type)
    }
    return(NormalizeDouble((PriceSum)/(LotSum),Digits));
 }
-//+------------------------------------------------------------------+
-//| Determine Open & Close                                           |
-//+------------------------------------------------------------------+
 
-
-//Determine Buy Trades
-bool determineOrder(int type)
-{
- 
- 
- if(!SelectLastCurrentTrade())
- {
-   return true;
- }
- 
- 
- //Add buy order if price going down
- if(SelectLastCurrentTrade())
- {
-   //deternube Grid size
-   int grid = Grid_Size();
- 
-   if (type == OP_BUY && OrderOpenPrice()- Ask >= 0.0001*grid)
-   {
-     return true;
-   }
-   if (type == OP_SELL && Bid - OrderOpenPrice() >= 0.0001*grid)
-   {
-      return true;
-   }
- }
-  return false;
-}
-
-
-//Determine Close
-
-double determineClose()
-{
-  //Close orders base on profit
-  double currentTotalProfit = findTotalProfit();
-  int takeProfit = TakeProfit;
-
-  SelectLastCurrentTrade();
-  it findNumberOfOrders() >= 8)
-  {
-    takeProfit = 0;
-  }
-  if(currentTotalProfit > takeProfit)
-  {
-   return true;
-  }
-  else if(findTotalProfit() > 150 || currentTotalProfit < -StopLoss)
-  {
-    return true;
-  }
-  return false;
-}
 
 //+------------------------------------------------------------------+
 //| Open & Close Orders                                              |
@@ -338,35 +295,18 @@ void myOrderClose(int type, int volumepercent, string ordername) //close open or
 int OnInit()
   {   
   //initialize LotDigits
+  double myPoint = Point();
+  if(Digits() == 5 || Digits() == 3)
+    {
+    myPoint *= 10;
+    MaxSlippage *= 10;
+    }   
+  //initialize LotDigits
    double LotStep = MarketInfo(Symbol(), MODE_LOTSTEP);
    if(LotStep >= 1) LotDigits = 0;
    else if(LotStep >= 0.1) LotDigits = 1;
    else if(LotStep >= 0.01) LotDigits = 2;
    else LotDigits = 3;
-
-   //initialize order set lot
-   OrderSetList[0] = 0.01;
-   OrderSetList[1] = 0.01;
-   OrderSetList[2] = 0.02;
-   OrderSetList[3] = 0.03;
-   OrderSetList[4] = 0.05;
-   OrderSetList[5] = 0.08;
-   OrderSetList[6] = 0.13;
-   OrderSetList[7] = 0.13;
-   OrderSetList[8] = 0.13;
-   OrderSetList[9] = 0.13;
-
-   //initialize order set grid
-   OrderSetList[0][1] = 8;
-   OrderSetList[1][1] = 14;
-   OrderSetList[2][1] = 20;
-   OrderSetList[3][1] = 28;
-   OrderSetList[4][1] = 38;
-   OrderSetList[5][1] = 51;
-   OrderSetList[6][1] = 68;
-   OrderSetList[7][1] = 98;
-   OrderSetList[8][1] = 138;
-   OrderSetList[9][1] = 218;
    
    //Initialise num
    num = rand()%10+1;
@@ -384,64 +324,127 @@ void OnTick()
    bool buyTrade = false;
    bool sellTrade = false;
    bool closeTrade = false;
-   
-   if( num > 5)
+
+   // Start New Order
+   if(!SelectLastCurrentTrade())
    {
-      buyTrade = determineOrder(OP_BUY);
-   }
-   else if( num <= 5)
-   {
-      sellTrade = determineOrder(OP_SELL);
+      if( num > 5)
+      {
+        buyTrade = true;
+      }
+      else if( num <= 5)
+      {
+        sellTrade = true;
+      }
    }
    
-   closeTrade = determineClose();
+  //If there is an existing orders, need to add order
+  else if(SelectLastCurrentTrade())
+  {
+    //Add buy order if price going down in pips
+    if(OrderType() == OP_BUY)
+    {
+      if(findNumberOfOrders() == 1 &&  Bid - PriceAverage(OP_BUY) > 8* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 2 &&  Bid - PriceAverage(OP_BUY) > 14* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 3 &&  Bid - PriceAverage(OP_BUY) > 28* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 4 &&  Bid - PriceAverage(OP_BUY) > 38* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 5 &&  Bid - PriceAverage(OP_BUY) > 51* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 6 &&  Bid - PriceAverage(OP_BUY) > 68* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 7 &&  Bid - PriceAverage(OP_BUY) > 98* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 8 &&  Bid - PriceAverage(OP_BUY) > 138* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 9 &&  Bid - PriceAverage(OP_BUY) > 218* myPoint) buyTrade = true;
+      if(findNumberOfOrders() == 10 &&  Bid - PriceAverage(OP_BUY) > 335* myPoint) buyTrade = true;
+      buyTrade = false; 
+    }
+    //Add sell order if price going up in pips
+    if(OrderType() == OP_SELL)
+    {
+      if(findNumberOfOrders() == 1 &&  PriceAverage(OP_SELL) - Ask > 8* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 2 &&  PriceAverage(OP_SELL) - Ask > 14* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 3 &&  PriceAverage(OP_SELL) - Ask > 28* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 4 &&  PriceAverage(OP_SELL) - Ask > 38* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 5 &&  PriceAverage(OP_SELL) - Ask > 51* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 6 &&  PriceAverage(OP_SELL) - Ask > 68* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 7 &&  PriceAverage(OP_SELL) - Ask > 98* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 8 &&  PriceAverage(OP_SELL) - Ask > 138* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 9 &&  PriceAverage(OP_SELL) - Ask > 218* myPoint) sellTrade = true;
+      if(findNumberOfOrders() == 10 &&  PriceAverage(OP_SELL) - Ask > 335* myPoint) sellTrade = true;
+      sellTrade = false; 
+    }
+  }
+  
+  //Open new Buy Order if there is a new order requirement
+  if(buyTrade) 
+    {
+    RefreshRates();
+    price = Ask;   
+    if(IsTradeAllowed())
+      {
+        //Add 5 trades
+        int ticket1 = myOrderSend("EURUSD",OP_BUY, price, MM_Size(), "");
+        //int ticket2 = myOrderSend("AUDUSD",OP_SELL, price, MM_Size(), "");
+        //int ticket3 = myOrderSend("EURJPY",OP_SELL, price, MM_Size(), "");
+        //int ticket4 = myOrderSend("NZDUSD",OP_SELL, price, MM_Size(), "");
+        //int ticket5 = myOrderSend("USDJPY",OP_SELL, price, MM_Size(), "");
+        //if(ticket1 <= 0 || ticket2 <= 0 || ticket3 <= 0 || ticket4 <= 0 || ticket5 <= 0) return;
+      }
+    else 
+        myAlert("order", "");
+    }
 
-   //Close All Positions
-   if(closeTrade) //Close order and take profit, if Profit > Set Amount. 
-     {   
-      RefreshRates();
-      if(IsTradeAllowed())
-         myOrderClose(OP_SELL, 100, "");
-         myOrderClose(OP_BUY, 100, "");
-         num = rand()%10+1;
-     }
-   
-   //Open Buy Order, instant signal is tested first
-   if(buyTrade) //Moving Average crosses above Moving Average
-     {
-      RefreshRates();
-      price = Ask;   
-      if(IsTradeAllowed())
-        {
-         int ticket1 = myOrderSend("EURUSD",OP_BUY, price, MM_Size(), "");
-         //int ticket2 = myOrderSend("AUDUSD",OP_SELL, price, MM_Size(), "");
-         //int ticket3 = myOrderSend("EURJPY",OP_SELL, price, MM_Size(), "");
-         //int ticket4 = myOrderSend("NZDUSD",OP_SELL, price, MM_Size(), "");
-         //int ticket5 = myOrderSend("USDJPY",OP_SELL, price, MM_Size(), "");
-         //if(ticket1 <= 0 || ticket2 <= 0 || ticket3 <= 0 || ticket4 <= 0 || ticket5 <= 0) return;
-        }
-      else //not autotrading => only send alert
-         myAlert("order", "");
-     }
-    
+  //Open new Sell Order if there is a new order requirement
+  if(sellTrade) 
+    {
+    RefreshRates();
+    price = Bid;
+    if(IsTradeAllowed())
+      {
+        //Add 5 trades
+        ticket1 = myOrderSend("EURUSD",OP_SELL, price, MM_Size(), "");
+        //ticket2 = myOrderSend("AUDUSD",OP_BUY, price, MM_Size(), "");
+        //ticket3 = myOrderSend("EURJPY",OP_BUY, price, MM_Size(), "");
+        //ticket4 = myOrderSend("NZDUSD",OP_BUY, price, MM_Size(), "");
+        //ticket5 = myOrderSend("USDJPY",OP_BUY, price, MM_Size(), "");
+        //if(ticket1 <= 0 || ticket2 <= 0 || ticket3 <= 0 || ticket4 <= 0 || ticket5 <= 0) return;
+      }
+    else
+        myAlert("order", "");
+    }
 
-   //Open Sell Order, instant signal is tested first
-   if(sellTrade) //Moving Average crosses above Moving Average
-     {
-      RefreshRates();
-      price = Bid;
-      if(IsTradeAllowed())
-        {
-         ticket1 = myOrderSend("EURUSD",OP_SELL, price, MM_Size(), "");
-         //ticket2 = myOrderSend("AUDUSD",OP_BUY, price, MM_Size(), "");
-         //ticket3 = myOrderSend("EURJPY",OP_BUY, price, MM_Size(), "");
-         //ticket4 = myOrderSend("NZDUSD",OP_BUY, price, MM_Size(), "");
-         //ticket5 = myOrderSend("USDJPY",OP_BUY, price, MM_Size(), "");
-         //if(ticket1 <= 0 || ticket2 <= 0 || ticket3 <= 0 || ticket4 <= 0 || ticket5 <= 0) return;
-        }
-      else //not autotrading => only send alert
-         myAlert("order", "");
-     }
+  //Deteremine Close trades
 
-   }
+  if(SelectLastCurrentTrade())
+  {
+    //If total profit in pip higher than 8 pip, Take Profit
+    if (findTotalProfit()/findTotalLots()>= TakeProfit_pip*myPoint) return true;
+    //If total number of order more than 8, change take profit to 0
+    if(findNumberOfOrders() >= 8)
+    {
+      TakeProfit = 0;
+    }
+    //If total profit > 150, take profit
+    if(findTotalProfit() >= TakeProfit)
+    {
+    return true;
+    }
+    // Stop Loss
+    if(findTotalProfit() < -StopLoss)
+    {
+      return true;
+    }
+    return false;
+  }
+
+  //Close All Positions
+  if(closeTrade) //Close order and take profit, if Profit > Set Amount. 
+    {   
+    RefreshRates();
+    if(IsTradeAllowed())
+        // Close all orders in different currency
+        myOrderClose(OP_SELL, 100, "");
+        myOrderClose(OP_BUY, 100, "");
+        num = rand()%10+1;
+    }
+
+}
 //+------------------------------------------------------------------+

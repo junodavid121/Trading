@@ -24,7 +24,6 @@ extern double endOrderDis = 0;
 extern int periodInd = 50;
 extern int AutoGrid = 100; 
 int LotDigits; //initialized in OnInit
-double myPoint; // initialized myPoint;
 bool crossed[4]; //initialized to true, used in function Cross
 int OrderRetry = 5; //# of retries if sending order returns error
 int OrderWait = 5; //# of seconds to wait if sending order returns error
@@ -78,7 +77,6 @@ bool SelectLastCurrentTrade(int type)
 double MM_Size(int type) 
   {
    double lots = MM_Start;
-   //If there is an live order, calculate lots use last order
    if(SelectLastCurrentTrade(type))
      {
       double orderlots = OrderLots();
@@ -90,7 +88,7 @@ double MM_Size(int type)
 
 //----------------------------------------------------------------------------------------------
 //Cross function, Only send out one order
-bool Cross(int i, bool condition) //returns true if "condition" is true and was false in the previous call
+bool Cross(int i, bool condition) 
   {
    bool ret = condition && !crossed[i];
    crossed[i] = condition;
@@ -99,7 +97,7 @@ bool Cross(int i, bool condition) //returns true if "condition" is true and was 
 
 //----------------------------------------------------------------------------------------------
 // count number of trades
-int TradesCount(int type) //returns # of open trades for order type, current symbol and magic number
+int TradesCount(int type) 
   {
    int result = 0;
    int total = OrdersTotal();
@@ -133,6 +131,26 @@ int auto_profit(int direction)
 
    }
 
+//----------------------------------------------------------------------------------------------
+// Calculate Average  price
+double PriceAverage(int type)
+{
+   double PriceSum =0;
+   double LotSum =0;
+   int count=0;
+
+   for (int i=0; i<OrdersTotal(); i++)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES))continue;
+      if(OrderSymbol()==Symbol() && OrderType()== type && OrderMagicNumber() == MagicNumber)
+      {
+         PriceSum += OrderOpenPrice()*OrderLots();
+         LotSum += OrderLots();
+         count++;
+      }
+   }
+   return(NormalizeDouble((PriceSum)/(LotSum),Digits));
+}
 
 //+------------------------------------------------------------------+
 //| Determine Open & Close                                           |
@@ -179,26 +197,7 @@ bool determineOrder(int period, int type)
   return false;
 }
 
-//----------------------------------------------------------------------------------------------
-// calculate Average  price
-double PriceAverage(int type)
-{
-   double PriceSum =0;
-   double LotSum =0;
-   int count=0;
 
-   for (int i=0; i<OrdersTotal(); i++)
-   {
-      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES))continue;
-      if(OrderSymbol()==Symbol() && OrderType()== type && OrderMagicNumber() == MagicNumber)
-      {
-         PriceSum += OrderOpenPrice()*OrderLots();
-         LotSum += OrderLots();
-         count++;
-      }
-   }
-   return(NormalizeDouble((PriceSum)/(LotSum),Digits));
-}
 
   
   
@@ -367,7 +366,7 @@ void myOrderClose(int type, int volumepercent, string ordername) //close open or
 int OnInit()
   {
   //initialize myPoint
-  myPoint = Point();
+  double myPoint = Point();
   if(Digits() == 5 || Digits() == 3)
     {
     myPoint *= 10;
