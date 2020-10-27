@@ -20,6 +20,7 @@ extern int MaxSlippage = 10;
 int LotDigits; 
 double OrderSetList[10][2];
 int num;
+double myPoint; //initialize myPoint
 int OrderRetry = 5; //# of retries if sending order returns error
 int OrderWait = 5; //# of seconds to wait if sending order returns error
 
@@ -86,41 +87,41 @@ int findNumberOfOrders()
 double MM_Size() 
   {
    double lots = 0.01;
-   else if(findNumberOfOrders() == 9)
+   if(findNumberOfOrders() == 9)
    {
-     lot = 0.13
+     lots = 0.13;
    }
    else if(findNumberOfOrders() == 8)
    {
-     lot = 0.13
+     lots = 0.13;
    }
    else if(findNumberOfOrders() == 7)
    {
-     lot = 0.13
+     lots = 0.13;
    }
    else if(findNumberOfOrders() == 6)
    {
-     lot = 0.13
+     lots = 0.13;
    }
    else if(findNumberOfOrders() == 5)
    {
-     lot = 0.8
+     lots = 0.8;
    }
    else if(findNumberOfOrders() == 4)
    {
-     lot = 0.5
+     lots = 0.5;
    }
    else if(findNumberOfOrders() == 3)
    {
-     lot = 0.3
+     lots = 0.3;
    }
    else if(findNumberOfOrders() == 2)
    {
-     lot = 0.2
+     lots = 0.2;
    }
    else if(findNumberOfOrders() == 1)
    {
-     lot = 0.01
+     lots = 0.01;
    }
    return(lots);
   }
@@ -295,7 +296,7 @@ void myOrderClose(int type, int volumepercent, string ordername) //close open or
 int OnInit()
   {   
   //initialize LotDigits
-  double myPoint = Point();
+  myPoint = Point();
   if(Digits() == 5 || Digits() == 3)
     {
     myPoint *= 10;
@@ -344,32 +345,35 @@ void OnTick()
     //Add buy order if price going down in pips
     if(OrderType() == OP_BUY)
     {
-      if(findNumberOfOrders() == 1 &&  Bid - PriceAverage(OP_BUY) > 8* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 2 &&  Bid - PriceAverage(OP_BUY) > 14* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 3 &&  Bid - PriceAverage(OP_BUY) > 28* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 4 &&  Bid - PriceAverage(OP_BUY) > 38* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 5 &&  Bid - PriceAverage(OP_BUY) > 51* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 6 &&  Bid - PriceAverage(OP_BUY) > 68* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 7 &&  Bid - PriceAverage(OP_BUY) > 98* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 8 &&  Bid - PriceAverage(OP_BUY) > 138* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 9 &&  Bid - PriceAverage(OP_BUY) > 218* myPoint) buyTrade = true;
-      if(findNumberOfOrders() == 10 &&  Bid - PriceAverage(OP_BUY) > 335* myPoint) buyTrade = true;
-      buyTrade = false; 
+      if(findNumberOfOrders() == 1 &&   PriceAverage(OP_BUY) - Bid > 8* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 2 &&  PriceAverage(OP_BUY) - Bid > 14* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 3 &&  PriceAverage(OP_BUY) - Bid > 28* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 4 &&  PriceAverage(OP_BUY) - Bid > 38* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 5 &&  PriceAverage(OP_BUY) - Bid > 51* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 6 &&  PriceAverage(OP_BUY) - Bid > 68* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 7 &&  PriceAverage(OP_BUY) - Bid > 98* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 8 &&  PriceAverage(OP_BUY) - Bid > 138* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 9 &&  PriceAverage(OP_BUY) - Bid > 218* myPoint) buyTrade = true;
+      else if(findNumberOfOrders() == 10 &&  PriceAverage(OP_BUY) - Bid > 335* myPoint) buyTrade = true;
+      else 
+      {
+         buyTrade = false; 
+      }
     }
     //Add sell order if price going up in pips
     if(OrderType() == OP_SELL)
     {
-      if(findNumberOfOrders() == 1 &&  PriceAverage(OP_SELL) - Ask > 8* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 2 &&  PriceAverage(OP_SELL) - Ask > 14* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 3 &&  PriceAverage(OP_SELL) - Ask > 28* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 4 &&  PriceAverage(OP_SELL) - Ask > 38* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 5 &&  PriceAverage(OP_SELL) - Ask > 51* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 6 &&  PriceAverage(OP_SELL) - Ask > 68* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 7 &&  PriceAverage(OP_SELL) - Ask > 98* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 8 &&  PriceAverage(OP_SELL) - Ask > 138* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 9 &&  PriceAverage(OP_SELL) - Ask > 218* myPoint) sellTrade = true;
-      if(findNumberOfOrders() == 10 &&  PriceAverage(OP_SELL) - Ask > 335* myPoint) sellTrade = true;
-      sellTrade = false; 
+      if(findNumberOfOrders() == 1 &&  Ask - PriceAverage(OP_SELL) > 8* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 2 &&  Ask - PriceAverage(OP_SELL) > 14* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 3 &&  Ask - PriceAverage(OP_SELL) > 28* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 4 &&  Ask - PriceAverage(OP_SELL) > 38* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 5 &&  Ask - PriceAverage(OP_SELL) > 51* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 6 &&  Ask - PriceAverage(OP_SELL) > 68* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 7 &&  Ask - PriceAverage(OP_SELL) > 98* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 8 &&  Ask - PriceAverage(OP_SELL) > 138* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 9 &&  Ask - PriceAverage(OP_SELL) > 218* myPoint) sellTrade = true;
+      else if(findNumberOfOrders() == 10 &&  Ask - PriceAverage(OP_SELL) > 335* myPoint) sellTrade = true;
+      else {sellTrade = false;}
     }
   }
   
@@ -416,23 +420,29 @@ void OnTick()
   if(SelectLastCurrentTrade())
   {
     //If total profit in pip higher than 8 pip, Take Profit
-    if (findTotalProfit()/findTotalLots()>= TakeProfit_pip*myPoint) return true;
+    if (findTotalProfit()/findTotalLots()>= TakeProfit_pip*myPoint) 
+    {
+      closeTrade = true;
+    }
     //If total number of order more than 8, change take profit to 0
-    if(findNumberOfOrders() >= 8)
+    else if(findNumberOfOrders() >= 8)
     {
       TakeProfit = 0;
     }
     //If total profit > 150, take profit
-    if(findTotalProfit() >= TakeProfit)
+    else if(findTotalProfit() >= TakeProfit)
     {
-    return true;
+      closeTrade = true;
     }
     // Stop Loss
-    if(findTotalProfit() < -StopLoss)
+    else if(findTotalProfit() < -StopLoss)
     {
-      return true;
+      closeTrade = true;
     }
-    return false;
+    else
+    {
+      closeTrade = false;
+    }
   }
 
   //Close All Positions
@@ -440,7 +450,7 @@ void OnTick()
     {   
     RefreshRates();
     if(IsTradeAllowed())
-        // Close all orders in different currency
+        // Close all orders in different currency 
         myOrderClose(OP_SELL, 100, "");
         myOrderClose(OP_BUY, 100, "");
         num = rand()%10+1;
